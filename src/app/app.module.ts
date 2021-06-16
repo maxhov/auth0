@@ -1,18 +1,46 @@
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
+import {NgModule} from '@angular/core';
+import {AppRoutingModule} from './app-routing.module';
+import {AppComponent} from './app.component';
+import {AuthHttpInterceptor, AuthModule} from "@auth0/auth0-angular";
 
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
+import auth0Config from '../assets/auth.json';
+import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
+import { ProtectedComponent } from './protected.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    ProtectedComponent,
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule,
+    AuthModule.forRoot({
+      ...auth0Config,
+      cacheLocation: 'localstorage',
+      useRefreshTokens: true,
+      httpInterceptor: {
+        allowedList: [
+          {
+            uri: "/api/*",
+            tokenOptions: {
+              audience: "http://localhost:8080",
+            },
+          },
+        ],
+      }
+    }),
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthHttpInterceptor,
+      multi: true
+    },
+  ],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}
